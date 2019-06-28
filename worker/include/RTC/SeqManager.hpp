@@ -51,4 +51,6 @@ namespace RTC
 	};
 } // namespace RTC
 
+#include "SeqManager.inl"
+
 #endif

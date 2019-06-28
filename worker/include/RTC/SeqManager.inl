@@ -1,6 +1,3 @@
-#define MS_CLASS "RTC::SeqManager"
-// #define MS_LOG_DEV
-
 #include "RTC/SeqManager.hpp"
 #include "Logger.hpp"
 
@@ -21,10 +18,10 @@ namespace RTC
 	}
 
 	template<typename T>
-	const typename SeqManager<T>::SeqLowerThan SeqManager<T>::isSeqLowerThan{};
+	const typename SeqManager<T>::SeqLowerThan SeqManager<T>::isSeqLowerThan;
 
 	template<typename T>
-	const typename SeqManager<T>::SeqHigherThan SeqManager<T>::isSeqHigherThan{};
+	const typename SeqManager<T>::SeqHigherThan SeqManager<T>::isSeqHigherThan;
 
 	template<typename T>
 	bool SeqManager<T>::IsSeqLowerThan(const T lhs, const T rhs)
@@ -124,9 +121,6 @@ namespace RTC
 		return this->maxOutput;
 	}
 
-	// Explicit instantiation to have all SeqManager definitions in this file.
-	template class SeqManager<uint8_t>;
-	template class SeqManager<uint16_t>;
-	template class SeqManager<uint32_t>;
+}//namespace
 
-} // namespace RTC
+

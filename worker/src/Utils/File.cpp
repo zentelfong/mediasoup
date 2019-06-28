@@ -6,7 +6,11 @@
 #include "Utils.hpp"
 #include <cerrno>
 #include <sys/stat.h> // stat()
+
+#ifndef _WIN32
 #include <unistd.h>   // access(), R_OK
+#endif
+
 
 namespace Utils
 {
@@ -24,13 +28,15 @@ namespace Utils
 			MS_THROW_ERROR("cannot read file '%s': %s", file, std::strerror(errno));
 
 		// Ensure it is a regular file.
-		if (!S_ISREG(fileStat.st_mode))
+		if ((fileStat.st_mode & S_IFREG) ==0)
 			MS_THROW_ERROR("'%s' is not a regular file", file);
 
+#ifndef _WIN32
 		// Ensure it is readable.
 		err = access(file, R_OK);
 
 		if (err != 0)
 			MS_THROW_ERROR("cannot read file '%s': %s", file, std::strerror(errno));
+#endif
 	}
 } // namespace Utils

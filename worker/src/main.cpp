@@ -20,7 +20,12 @@
 #include <iostream> // std::cerr, std::endl
 #include <map>
 #include <string>
+
+#ifdef _WIN32
+#include <Windows.h>
+#else
 #include <unistd.h> // usleep()
+#endif
 
 static constexpr int ChannelFd{ 3 };
 
@@ -29,14 +34,14 @@ void IgnoreSignals();
 int main(int argc, char* argv[])
 {
 	// Ensure we are called by our Node library.
-	if (std::getenv("MEDIASOUP_VERSION") == nullptr)
-	{
-		MS_ERROR_STD("you don't seem to be my real father!");
+	//if (std::getenv("MEDIASOUP_VERSION") == nullptr)
+	//{
+	//	MS_ERROR_STD("you don't seem to be my real father!");
+	//	std::_Exit(EXIT_FAILURE);
+	//}
+	//std::string version = std::getenv("MEDIASOUP_VERSION");
 
-		std::_Exit(EXIT_FAILURE);
-	}
-
-	std::string version = std::getenv("MEDIASOUP_VERSION");
+    std::string version = "3.0.0.0";
 
 	// Initialize libuv stuff (we need it for the Channel).
 	DepLibUV::ClassInit();
@@ -121,7 +126,11 @@ int main(int argc, char* argv[])
 
 		// Wait a bit so peding messages to stdout/Channel arrive to the Node
 		// process.
+#ifdef _WIN32
+        Sleep(200);
+#else
 		usleep(200000);
+#endif
 		std::_Exit(EXIT_SUCCESS);
 	}
 	catch (const MediaSoupError& error)
@@ -134,6 +143,7 @@ int main(int argc, char* argv[])
 
 void IgnoreSignals()
 {
+#ifndef _WIN32
 	MS_TRACE();
 
 	int err;
@@ -167,4 +177,5 @@ void IgnoreSignals()
 		if (err != 0)
 			MS_THROW_ERROR("sigaction() failed for signal %s: %s", sigName.c_str(), std::strerror(errno));
 	}
+#endif
 }

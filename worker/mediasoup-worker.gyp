@@ -21,11 +21,11 @@
       'src/Utils/File.cpp',
       'src/Utils/IP.cpp',
       'src/handles/SignalsHandler.cpp',
-      'src/handles/TcpConnection.cpp',
-      'src/handles/TcpServer.cpp',
+      'src/handles/TcpConnection2.cpp',
+      'src/handles/TcpServer2.cpp',
       'src/handles/Timer.cpp',
-      'src/handles/UdpSocket.cpp',
-      'src/handles/UnixStreamSocket.cpp',
+      'src/handles/UdpSocket2.cpp',
+      'src/handles/UnixStreamSocket2.cpp',
       'src/Channel/Notifier.cpp',
       'src/Channel/Request.cpp',
       'src/Channel/UnixStreamSocket.cpp',
@@ -49,7 +49,6 @@
       'src/RTC/RtpStreamRecv.cpp',
       'src/RTC/RtpStreamSend.cpp',
       'src/RTC/RtpDataCounter.cpp',
-      'src/RTC/SeqManager.cpp',
       'src/RTC/SimpleConsumer.cpp',
       'src/RTC/SimulcastConsumer.cpp',
       'src/RTC/SrtpSession.cpp',
@@ -237,6 +236,17 @@
         ]
       }],
 
+      [ 'OS == "win"', {
+		'dependencies':
+		[
+		  'deps/getopt9/getopt9.gyp:getopt9'
+		],
+		'include_dirs':
+		[
+		  'deps/getopt9/include'
+		],
+      }],
+	  
       [ 'OS == "linux" and mediasoup_asan == "true"', {
         'cflags': [ '-fsanitize=address' ],
         'ldflags': [ '-fsanitize=address' ]
