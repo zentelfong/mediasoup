@@ -504,6 +504,126 @@ namespace RTC
 			jsonObject["maxIncomingBitrate"] = this->maxIncomingBitrate;
 	}
 
+    void WebRtcTransport::Connect(json& jsonObject)
+    {
+        // Ensure this method is not called twice.
+        if (this->connected)
+            MS_THROW_ERROR("connect() already called");
+
+        RTC::DtlsTransport::Fingerprint dtlsRemoteFingerprint;
+        RTC::DtlsTransport::Role dtlsRemoteRole;
+
+        auto jsonDtlsParametersIt = jsonObject.find("dtlsParameters");
+
+        if (jsonDtlsParametersIt == jsonObject.end() || !jsonDtlsParametersIt->is_object())
+            MS_THROW_TYPE_ERROR("missing dtlsParameters");
+
+        auto jsonFingerprintsIt = jsonDtlsParametersIt->find("fingerprints");
+
+        if (jsonFingerprintsIt == jsonDtlsParametersIt->end() || !jsonFingerprintsIt->is_array())
+            MS_THROW_TYPE_ERROR("missing dtlsParameters.fingerprints");
+
+        // NOTE: Just take the first fingerprint.
+        for (auto& jsonFingerprint : *jsonFingerprintsIt)
+        {
+            if (!jsonFingerprint.is_object())
+                MS_THROW_TYPE_ERROR("wrong entry in dtlsParameters.fingerprints (not an object)");
+
+            auto jsonAlgorithmIt = jsonFingerprint.find("algorithm");
+
+            if (jsonAlgorithmIt == jsonFingerprint.end())
+                MS_THROW_TYPE_ERROR("missing fingerprint.algorithm");
+            else if (!jsonAlgorithmIt->is_string())
+                MS_THROW_TYPE_ERROR("wrong fingerprint.algorithm (not a string)");
+
+            dtlsRemoteFingerprint.algorithm =
+                RTC::DtlsTransport::GetFingerprintAlgorithm(jsonAlgorithmIt->get<std::string>());
+
+            if (dtlsRemoteFingerprint.algorithm == RTC::DtlsTransport::FingerprintAlgorithm::NONE)
+                MS_THROW_TYPE_ERROR("invalid fingerprint.algorithm value");
+
+            auto jsonValueIt = jsonFingerprint.find("value");
+
+            if (jsonValueIt == jsonFingerprint.end())
+                MS_THROW_TYPE_ERROR("missing fingerprint.value");
+            else if (!jsonValueIt->is_string())
+                MS_THROW_TYPE_ERROR("wrong fingerprint.value (not a string)");
+
+            dtlsRemoteFingerprint.value = jsonValueIt->get<std::string>();
+
+            // Just use the first fingerprint.
+            break;
+        }
+
+        auto jsonRoleIt = jsonDtlsParametersIt->find("role");
+
+        if (jsonRoleIt != jsonDtlsParametersIt->end())
+        {
+            if (!jsonRoleIt->is_string())
+                MS_THROW_TYPE_ERROR("wrong dtlsParameters.role (not a string)");
+
+            dtlsRemoteRole = RTC::DtlsTransport::StringToRole(jsonRoleIt->get<std::string>());
+
+            if (dtlsRemoteRole == RTC::DtlsTransport::Role::NONE)
+                MS_THROW_TYPE_ERROR("invalid dtlsParameters.role value");
+        }
+        else
+        {
+            dtlsRemoteRole = RTC::DtlsTransport::Role::AUTO;
+        }
+
+        // Set local DTLS role.
+        switch (dtlsRemoteRole)
+        {
+            case RTC::DtlsTransport::Role::CLIENT:
+            {
+                this->dtlsRole = RTC::DtlsTransport::Role::SERVER;
+
+                break;
+            }
+            case RTC::DtlsTransport::Role::SERVER:
+            {
+                this->dtlsRole = RTC::DtlsTransport::Role::CLIENT;
+
+                break;
+            }
+            // If the peer has role "auto" we become "client" since we are ICE controlled.
+            case RTC::DtlsTransport::Role::AUTO:
+            {
+                this->dtlsRole = RTC::DtlsTransport::Role::CLIENT;
+
+                break;
+            }
+            case RTC::DtlsTransport::Role::NONE:
+            {
+                MS_THROW_TYPE_ERROR("invalid remote DTLS role");
+            }
+        }
+
+        this->connected = true;
+
+        // Pass the remote fingerprint to the DTLS transport.
+        if (this->dtlsTransport->SetRemoteFingerprint(dtlsRemoteFingerprint))
+        {
+            // If everything is fine, we may run the DTLS transport if ready.
+            MayRunDtlsTransport();
+        }
+    }
+
+
+    void WebRtcTransport::SetMaxBitrate(uint32_t bitrate)
+    {
+        MS_TRACE();
+        static constexpr uint32_t MinBitrate{ 10000 };
+
+        if (bitrate < MinBitrate)
+            bitrate = MinBitrate;
+
+        this->maxIncomingBitrate = bitrate;
+
+        MS_DEBUG_TAG(bwe, "WebRtcTransport maximum incoming bitrate set to %" PRIu32 "bps", bitrate);
+    }
+
 	void WebRtcTransport::HandleRequest(Channel::Request* request)
 	{
 		MS_TRACE();

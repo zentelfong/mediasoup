@@ -20,6 +20,8 @@ namespace RTC
 		PipeTransport(const std::string& id, RTC::Transport::Listener* listener, json& data);
 		~PipeTransport() override;
 
+        void Connect(const std::string& ip, uint16_t port);
+
 	public:
 		void FillJson(json& jsonObject) const override;
 		void FillJsonStats(json& jsonArray) override;

@@ -37,6 +37,10 @@ namespace RTC
 		WebRtcTransport(const std::string& id, RTC::Transport::Listener* listener, json& data);
 		~WebRtcTransport() override;
 
+        //²Ù×÷½Ó¿Ú
+        void Connect(json& jsonObject);
+        void SetMaxBitrate(uint32_t bitrate);
+
 	public:
 		void FillJson(json& jsonObject) const override;
 		void FillJsonStats(json& jsonArray) override;

@@ -32,6 +32,10 @@ namespace RTC
         RTC::WebRtcTransport* CreateRtcTransport(const std::string& transportId,json& config);
         RTC::PlainRtpTransport* CreatePlainTransport(const std::string& transportId, json& config);
         RTC::PipeTransport* CreatePipeTransport(const std::string& transportId, json& config);
+
+        //创建自定义Transport
+
+
         RTC::Transport* FindTransport(const std::string& transportId);
         bool CloseTransport(const std::string& transportId);
 

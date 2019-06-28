@@ -677,6 +677,7 @@ namespace RTC
 
 		auto& consumers = this->mapProducerConsumers.at(producer);
 
+        //producer收到包转发给consumers
 		for (auto* consumer : consumers)
 		{
 			consumer->SendRtpPacket(packet);

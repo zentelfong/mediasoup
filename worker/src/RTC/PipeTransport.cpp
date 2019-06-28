@@ -149,6 +149,77 @@ namespace RTC
 		jsonObject["sendBitrate"] = RTC::Transport::GetSendBitrate();
 	}
 
+    void PipeTransport::Connect(const std::string& inip, uint16_t port)
+    {
+        // Ensure this method is not called twice.
+        if (this->tuple != nullptr)
+            MS_THROW_ERROR("connect() already called");
+
+        try
+        {
+            std::string ip = inip;
+            // This may throw.
+            Utils::IP::NormalizeIp(ip);
+
+            int err;
+
+            switch (Utils::IP::GetFamily(ip))
+            {
+                case AF_INET:
+                {
+                    err = uv_ip4_addr(
+                        ip.c_str(),
+                        static_cast<int>(port),
+                        reinterpret_cast<struct sockaddr_in*>(&this->remoteAddrStorage));
+
+                    if (err != 0)
+                        MS_ABORT("uv_ip4_addr() failed: %s", uv_strerror(err));
+
+                    break;
+                }
+
+                case AF_INET6:
+                {
+                    err = uv_ip6_addr(
+                        ip.c_str(),
+                        static_cast<int>(port),
+                        reinterpret_cast<struct sockaddr_in6*>(&this->remoteAddrStorage));
+
+                    if (err != 0)
+                        MS_ABORT("uv_ip6_addr() failed: %s", uv_strerror(err));
+
+                    break;
+                }
+
+                default:
+                {
+                    MS_THROW_ERROR("invalid IP '%s'", ip.c_str());
+                }
+            }
+
+            // Create the tuple.
+            this->tuple = new RTC::TransportTuple(
+                this->udpSocket, reinterpret_cast<struct sockaddr*>(&this->remoteAddrStorage));
+
+            if (!this->listenIp.announcedIp.empty())
+                this->tuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
+        }
+        catch (const MediaSoupError& error)
+        {
+            if (this->tuple != nullptr)
+            {
+                delete this->tuple;
+                this->tuple = nullptr;
+            }
+
+            throw;
+        }
+
+        // Assume we are connected (there is no much more we can do to know it)
+        // and tell the parent class.
+        RTC::Transport::Connected();
+    }
+
 	void PipeTransport::HandleRequest(Channel::Request* request)
 	{
 		MS_TRACE();

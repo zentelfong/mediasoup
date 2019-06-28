@@ -21,6 +21,8 @@ namespace RTC
 		PlainRtpTransport(const std::string& id, RTC::Transport::Listener* listener, json& data);
 		~PlainRtpTransport() override;
 
+        void Connect(const std::string& ip,uint16_t port,uint16_t rtcpPort);
+
 	public:
 		void FillJson(json& jsonObject) const override;
 		void FillJsonStats(json& jsonArray) override;
