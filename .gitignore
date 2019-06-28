@@ -18,3 +18,17 @@
 # Vim temporal files.
 *.swp
 *.swo
+
+/worker/.vs
+/worker/Debug
+
+*.obj
+*.vcxproj
+*.filters
+*.sln
+*.db
+*.tlog
+*.log
+*.pdb
+*.opendb
+*.pyc

@@ -349,6 +349,66 @@ namespace RTC
 		}
 	}
 
+    void Producer::Pause()
+    {
+        MS_TRACE();
+        if (this->paused)
+        {
+            return;
+        }
+
+        // Pause all streams.
+        for (auto& kv : this->mapSsrcRtpStream)
+        {
+            auto* rtpStream = kv.second;
+
+            rtpStream->Pause();
+        }
+
+        this->paused = true;
+
+        MS_DEBUG_DEV("Producer paused [producerId:%s]", this->id.c_str());
+
+        this->listener->OnProducerPaused(this);
+    }
+
+    void Producer::Resume()
+    {
+        MS_TRACE();
+        if (!this->paused)
+        {
+            return;
+        }
+
+        // Resume all streams.
+        for (auto& kv : this->mapSsrcRtpStream)
+        {
+            auto* rtpStream = kv.second;
+
+            rtpStream->Resume();
+        }
+
+        this->paused = false;
+
+        MS_DEBUG_DEV("Producer resumed [producerId:%s]", this->id.c_str());
+
+        this->listener->OnProducerResumed(this);
+
+        if (this->keyFrameRequestManager)
+        {
+            MS_DEBUG_2TAGS(rtcp, rtx, "requesting forced key frame(s) after resumed");
+
+            // Request a key frame for all streams.
+            for (auto& kv : this->mapSsrcRtpStream)
+            {
+                auto ssrc = kv.first;
+
+                this->keyFrameRequestManager->ForceKeyFrameNeeded(ssrc);
+            }
+        }
+    }
+
+
 	void Producer::HandleRequest(Channel::Request* request)
 	{
 		MS_TRACE();

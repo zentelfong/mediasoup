@@ -54,7 +54,7 @@ namespace RTC
 			  uint32_t mappedSsrc,
 			  uint8_t& worstRemoteFractionLost) = 0;
 			virtual void OnTransportNewConsumer(
-			  RTC::Transport* transport, RTC::Consumer* consumer, std::string& producerId) = 0;
+			  RTC::Transport* transport, RTC::Consumer* consumer,const std::string& producerId) = 0;
 			virtual void OnTransportConsumerClosed(RTC::Transport* transport, RTC::Consumer* consumer) = 0;
 			virtual void OnTransportConsumerProducerClosed(
 			  RTC::Transport* transport, RTC::Consumer* consumer) = 0;
@@ -65,6 +65,15 @@ namespace RTC
 	public:
 		Transport(const std::string& id, Listener* listener);
 		virtual ~Transport();
+
+        //²Ù×÷ api
+        RTC::Producer* Produce(const std::string& producerId, json& config);
+        bool CloseProduce(const std::string& producerId);
+        RTC::Producer* FindProducer(const std::string& producerId);
+
+        RTC::Consumer* Consume(const std::string& producerId, const std::string& consumerId, json& config);
+        bool CloseConsume(const std::string& producerId);
+        RTC::Consumer* FindConsumer(const std::string& producerId);
 
 	public:
 		void CloseProducersAndConsumers();

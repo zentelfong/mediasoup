@@ -178,6 +178,42 @@ namespace RTC
 		jsonObject["producerPaused"] = this->producerPaused;
 	}
 
+    void Consumer::Pause()
+    {
+        MS_TRACE();
+        if (this->paused)
+        {
+            return;
+        }
+
+        bool wasActive = IsActive();
+
+        this->paused = true;
+
+        MS_DEBUG_DEV("Consumer paused [consumerId:%s]", this->id.c_str());
+
+        if (wasActive)
+            UserOnPaused();
+    }
+
+    void Consumer::Resume()
+    {
+        MS_TRACE();
+        if (this->paused)
+        {
+            return;
+        }
+
+        bool wasActive = IsActive();
+
+        this->paused = true;
+
+        MS_DEBUG_DEV("Consumer paused [consumerId:%s]", this->id.c_str());
+
+        if (wasActive)
+            UserOnPaused();
+    }
+
 	void Consumer::HandleRequest(Channel::Request* request)
 	{
 		MS_TRACE();

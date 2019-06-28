@@ -18,11 +18,22 @@ using json = nlohmann::json;
 
 namespace RTC
 {
+    class WebRtcTransport;
+    class PlainRtpTransport;
+    class PipeTransport;
+
 	class Router : public RTC::Transport::Listener
 	{
 	public:
 		explicit Router(const std::string& id);
 		virtual ~Router();
+
+        //²Ù×÷api
+        RTC::WebRtcTransport* CreateRtcTransport(const std::string& transportId,json& config);
+        RTC::PlainRtpTransport* CreatePlainTransport(const std::string& transportId, json& config);
+        RTC::PipeTransport* CreatePipeTransport(const std::string& transportId, json& config);
+        RTC::Transport* FindTransport(const std::string& transportId);
+        bool CloseTransport(const std::string& transportId);
 
 	public:
 		void FillJson(json& jsonObject) const;
@@ -62,7 +73,7 @@ namespace RTC
 		  uint32_t mappedSsrc,
 		  uint8_t& worstRemoteFractionLost) override;
 		void OnTransportNewConsumer(
-		  RTC::Transport* transport, RTC::Consumer* consumer, std::string& producerId) override;
+		  RTC::Transport* transport, RTC::Consumer* consumer,const std::string& producerId) override;
 		void OnTransportConsumerClosed(RTC::Transport* transport, RTC::Consumer* consumer) override;
 		void OnTransportConsumerProducerClosed(RTC::Transport* transport, RTC::Consumer* consumer) override;
 		void OnTransportConsumerKeyFrameRequested(

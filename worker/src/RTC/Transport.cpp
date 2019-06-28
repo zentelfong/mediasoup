@@ -137,6 +137,223 @@ namespace RTC
 		}
 	}
 
+
+    RTC::Producer* Transport::Produce(const std::string& producerId, json& config)
+    {
+        if (FindProducer(producerId))
+            return nullptr;
+
+        // This may throw.
+        auto* producer = new RTC::Producer(producerId, this, config);
+
+        // Insert the Producer into the RtpListener.
+        // This may throw. If so, delete the Producer and throw.
+        try
+        {
+            this->rtpListener.AddProducer(producer);
+        }
+        catch (const MediaSoupError& error)
+        {
+            delete producer;
+            return nullptr;
+        }
+
+        // Notify the listener.
+        // This may throw if a Producer with same id already exists.
+        try
+        {
+            this->listener->OnTransportNewProducer(this, producer);
+        }
+        catch (const MediaSoupError& error)
+        {
+            delete producer;
+            return nullptr;
+        }
+
+        // Insert into the map.
+        this->mapProducers[producerId] = producer;
+
+        MS_DEBUG_DEV("Producer created [producerId:%s]", producerId.c_str());
+
+        // Take the transport related RTP header extensions of the Producer and
+        // add them to the Transport.
+        // NOTE: Producer::GetRtpHeaderExtensionIds() returns the original
+        // header extension ids of the Producer (and not their mapped values).
+        auto& producerRtpHeaderExtensionIds = producer->GetRtpHeaderExtensionIds();
+
+        if (producerRtpHeaderExtensionIds.mid != 0u)
+            this->rtpHeaderExtensionIds.mid = producerRtpHeaderExtensionIds.mid;
+
+        if (producerRtpHeaderExtensionIds.rid != 0u)
+            this->rtpHeaderExtensionIds.rid = producerRtpHeaderExtensionIds.rid;
+
+        if (producerRtpHeaderExtensionIds.rrid != 0u)
+            this->rtpHeaderExtensionIds.rrid = producerRtpHeaderExtensionIds.rrid;
+
+        if (producerRtpHeaderExtensionIds.absSendTime != 0u)
+            this->rtpHeaderExtensionIds.absSendTime = producerRtpHeaderExtensionIds.absSendTime;
+
+        // Tell the subclass.
+        UserOnNewProducer(producer);
+        return producer;
+    }
+
+    bool Transport::CloseProduce(const std::string& producerId)
+    {
+        // This may throw.
+        RTC::Producer* producer = FindProducer(producerId);
+        if (!producer)
+            return false;
+
+        // Remove it from the RtpListener.
+        this->rtpListener.RemoveProducer(producer);
+
+        // Remove it from the map.
+        this->mapProducers.erase(producer->id);
+
+        // Notify the listener.
+        this->listener->OnTransportProducerClosed(this, producer);
+
+        MS_DEBUG_DEV("Producer closed [producerId:%s]", producer->id.c_str());
+
+        // Delete it.
+        delete producer;
+        return true;
+    }
+
+    RTC::Consumer* Transport::Consume(const std::string& producerId, 
+        const std::string& consumerId, json& config)
+    {
+        MS_TRACE();
+        if (FindConsumer(consumerId))
+            return nullptr;
+
+        // Get type.
+        auto jsonTypeIt = config.find("type");
+
+        if (jsonTypeIt == config.end() || !jsonTypeIt->is_string())
+            MS_THROW_TYPE_ERROR("missing type");
+
+        // This may throw.
+        auto type = RTC::RtpParameters::GetType(jsonTypeIt->get<std::string>());
+
+        RTC::Consumer* consumer{ nullptr };
+
+        switch (type)
+        {
+        case RTC::RtpParameters::Type::NONE:
+        {
+            MS_THROW_TYPE_ERROR("invalid type 'none'");
+
+            break;
+        }
+
+        case RTC::RtpParameters::Type::SIMPLE:
+        {
+            // This may throw.
+            consumer = new RTC::SimpleConsumer(consumerId, this, config);
+
+            break;
+        }
+
+        case RTC::RtpParameters::Type::SIMULCAST:
+        {
+            // This may throw.
+            consumer = new RTC::SimulcastConsumer(consumerId, this, config);
+
+            break;
+        }
+
+        case RTC::RtpParameters::Type::SVC:
+        {
+            // This may throw.
+            consumer = new RTC::SvcConsumer(consumerId, this, config);
+
+            break;
+        }
+
+        case RTC::RtpParameters::Type::PIPE:
+        {
+            // This may throw.
+            consumer = new RTC::PipeConsumer(consumerId, this, config);
+
+            break;
+        }
+        }
+
+        // Notify the listener.
+        // This may throw if no Producer is found.
+        try
+        {
+            this->listener->OnTransportNewConsumer(this, consumer, producerId);
+        }
+        catch (const MediaSoupError& error)
+        {
+            delete consumer;
+
+            throw;
+        }
+
+        // Insert into the maps.
+        this->mapConsumers[consumerId] = consumer;
+
+        for (auto ssrc : consumer->GetMediaSsrcs())
+        {
+            this->mapSsrcConsumer[ssrc] = consumer;
+        }
+
+        MS_DEBUG_DEV(
+            "Consumer created [consumerId:%s, producerId:%s]", consumerId.c_str(), producerId.c_str());
+
+        // Tell the subclass.
+        UserOnNewConsumer(consumer);
+
+        if (IsConnected())
+            consumer->TransportConnected();
+
+        return consumer;
+    }
+
+    bool Transport::CloseConsume(const std::string& consumerId)
+    {
+        RTC::Consumer* consumer = FindConsumer(consumerId);
+        if (!consumer)
+            return false;
+
+        // Remove it from the maps.
+        this->mapConsumers.erase(consumer->id);
+
+        for (auto ssrc : consumer->GetMediaSsrcs())
+        {
+            this->mapSsrcConsumer.erase(ssrc);
+        }
+
+        // Notify the listener.
+        this->listener->OnTransportConsumerClosed(this, consumer);
+
+        MS_DEBUG_DEV("Consumer closed [consumerId:%s]", consumer->id.c_str());
+
+        // Delete it.
+        delete consumer;
+        return true;
+    }
+
+    RTC::Producer* Transport::FindProducer(const std::string& producerId)
+    {
+        auto find = this->mapProducers.find(producerId);
+        if (find == this->mapProducers.end())
+            return nullptr;
+        return find->second;
+    }
+
+    RTC::Consumer* Transport::FindConsumer(const std::string& consumerId)
+    {
+        auto find = this->mapConsumers.find(consumerId);
+        if (find == this->mapConsumers.end())
+            return nullptr;
+        return find->second;
+    }
+
 	void Transport::HandleRequest(Channel::Request* request)
 	{
 		MS_TRACE();

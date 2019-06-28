@@ -65,6 +65,10 @@ namespace RTC
 		Producer(const std::string& id, RTC::Producer::Listener* listener, json& data);
 		virtual ~Producer();
 
+        //ÔÝÍ£»Ö¸´½Ó¿Ú
+        void Pause();
+        void Resume();
+
 	public:
 		void FillJson(json& jsonObject) const;
 		void FillJsonStats(json& jsonArray) const;

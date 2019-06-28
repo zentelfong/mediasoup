@@ -118,6 +118,39 @@ RTC::Router* Worker::GetRouterFromRequest(Channel::Request* request) const
 	return router;
 }
 
+RTC::Router* Worker::CreateRouter(const std::string& routerId)
+{
+    if (this->mapRouters.find(routerId) != this->mapRouters.end())
+    {
+        return nullptr;
+    }
+    auto* router = new RTC::Router(routerId);
+    this->mapRouters[routerId] = router;
+    return router;
+}
+
+RTC::Router* Worker::FindRouter(const std::string& routerId)
+{
+    auto it = this->mapRouters.find(routerId);
+    if (it == this->mapRouters.end())
+        return nullptr;
+    return it->second;
+}
+
+bool Worker::CloseRouter(const std::string& routerId)
+{
+    auto it = this->mapRouters.find(routerId);
+
+    if (it == this->mapRouters.end())
+        return false;
+
+    RTC::Router* router = it->second;
+    this->mapRouters.erase(it);
+    delete router;
+    return true;
+}
+
+
 inline void Worker::OnChannelRequest(Channel::ChannelBase* /*channel*/, Channel::Request* request)
 {
 	MS_TRACE();

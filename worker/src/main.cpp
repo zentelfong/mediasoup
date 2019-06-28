@@ -27,6 +27,9 @@
 #include <unistd.h> // usleep()
 #endif
 
+
+//https://mediasoup.org/documentation/v3/mediasoup/api/
+
 static constexpr int ChannelFd{ 3 };
 
 void IgnoreSignals();

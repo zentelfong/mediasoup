@@ -18,6 +18,11 @@ public:
 	explicit Worker(Channel::ChannelBase* channel);
 	~Worker();
 
+    //Ìí¼Óapi²Ù×÷
+    RTC::Router* CreateRouter(const std::string& routerId);
+    bool CloseRouter(const std::string& routerId);
+    RTC::Router* FindRouter(const std::string& routerId);
+
 private:
 	void Close();
 	void FillJson(json& jsonObject) const;

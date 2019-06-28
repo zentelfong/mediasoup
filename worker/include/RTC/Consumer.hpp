@@ -41,6 +41,9 @@ namespace RTC
 		  RTC::RtpParameters::Type type);
 		virtual ~Consumer();
 
+        void Pause();
+        void Resume();
+
 	public:
 		virtual void FillJson(json& jsonObject) const;
 		virtual void FillJsonStats(json& jsonArray) const  = 0;

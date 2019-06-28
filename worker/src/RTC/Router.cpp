@@ -126,6 +126,85 @@ namespace RTC
 		}
 	}
 
+
+    RTC::WebRtcTransport* Router::CreateRtcTransport(const std::string& transportId, json& config)
+    {
+        MS_TRACE();
+        if (FindTransport(transportId))
+            return nullptr;
+
+        // This may throw.
+        auto* webRtcTransport = new RTC::WebRtcTransport(transportId, this, config);
+
+        // Insert into the map.
+        this->mapTransports[transportId] = webRtcTransport;
+
+        MS_DEBUG_DEV("WebRtcTransport created [transportId:%s]", transportId.c_str());
+        return webRtcTransport;
+    }
+
+    RTC::PlainRtpTransport* Router::CreatePlainTransport(const std::string& transportId, json& config)
+    {
+        MS_TRACE();
+        if (FindTransport(transportId))
+            return nullptr;
+
+        // This may throw.
+        auto* transport = new RTC::PlainRtpTransport(transportId, this, config);
+
+        // Insert into the map.
+        this->mapTransports[transportId] = transport;
+
+        MS_DEBUG_DEV("PlainRtpTransport created [transportId:%s]", transportId.c_str());
+        return transport;
+    }
+
+    RTC::PipeTransport* Router::CreatePipeTransport(const std::string& transportId, json& config)
+    {
+        MS_TRACE();
+        if (FindTransport(transportId))
+            return nullptr;
+
+        // This may throw.
+        auto* transport = new RTC::PipeTransport(transportId, this, config);
+
+        // Insert into the map.
+        this->mapTransports[transportId] = transport;
+
+        MS_DEBUG_DEV("PipeTransport created [transportId:%s]", transportId.c_str());
+        return transport;
+    }
+
+    RTC::Transport* Router::FindTransport(const std::string& transportId)
+    {
+        auto it = this->mapTransports.find(transportId);
+        if (it == this->mapTransports.end())
+            return nullptr;
+        return it->second;
+    }
+
+    bool Router::CloseTransport(const std::string& transportId)
+    {
+        MS_TRACE();
+        RTC::Transport* transport = FindTransport(transportId);
+        if (!transport)
+            return false;
+
+        // Tell the Transport to close all its Producers and Consumers so it will
+        // notify us about their closured.
+        transport->CloseProducersAndConsumers();
+
+        // Remove it from the map and delete it.
+        this->mapTransports.erase(transport->id);
+
+        MS_DEBUG_DEV("Transport closed [transportId:%s]", transport->id.c_str());
+
+        // Delete it.
+        delete transport;
+        return true;
+    }
+
+
 	void Router::HandleRequest(Channel::Request* request)
 	{
 		MS_TRACE();
@@ -633,7 +712,7 @@ namespace RTC
 	}
 
 	inline void Router::OnTransportNewConsumer(
-	  RTC::Transport* /*transport*/, RTC::Consumer* consumer, std::string& producerId)
+	  RTC::Transport* /*transport*/, RTC::Consumer* consumer,const std::string& producerId)
 	{
 		MS_TRACE();
 
