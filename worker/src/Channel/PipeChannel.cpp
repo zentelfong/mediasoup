@@ -1,7 +1,7 @@
-#define MS_CLASS "Channel::UnixStreamSocket"
+#define MS_CLASS "Channel::PipeChannel"
 // #define MS_LOG_DEV
 
-#include "Channel/UnixStreamSocket.hpp"
+#include "Channel/PipeChannel.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include <cmath>   // std::ceil()
@@ -22,20 +22,20 @@ namespace Channel
 
 	/* Instance methods. */
 
-	UnixStreamSocket::UnixStreamSocket(int fd)
-	  : ::UnixStreamSocket::UnixStreamSocket(fd, NsMessageMaxLen)
+    PipeChannel::PipeChannel(int fd)
+	  : PipeStreamSocket(fd, NsMessageMaxLen)
 	{
 		MS_TRACE_STD();
 	}
 
-	void UnixStreamSocket::SetListener(Listener* listener)
+	void PipeChannel::SetListener(Listener* listener)
 	{
 		MS_TRACE_STD();
 
 		this->listener = listener;
 	}
 
-	void UnixStreamSocket::Send(json& jsonMessage)
+	void PipeChannel::Send(json& jsonMessage)
 	{
 		if (IsClosed())
 			return;
@@ -72,7 +72,7 @@ namespace Channel
 		Write(WriteBuffer, nsLen);
 	}
 
-	void UnixStreamSocket::SendLog(char* nsPayload, size_t nsPayloadLen)
+	void PipeChannel::SendLog(char* nsPayload, size_t nsPayloadLen)
 	{
 		if (IsClosed())
 			return;
@@ -109,7 +109,7 @@ namespace Channel
 		Write(WriteBuffer, nsLen);
 	}
 
-	void UnixStreamSocket::SendBinary(const uint8_t* nsPayload, size_t nsPayloadLen)
+	void PipeChannel::SendBinary(const uint8_t* nsPayload, size_t nsPayloadLen)
 	{
 		if (IsClosed())
 			return;
@@ -144,7 +144,7 @@ namespace Channel
 		Write(WriteBuffer, nsLen);
 	}
 
-	void UnixStreamSocket::UserOnUnixStreamRead()
+	void PipeChannel::UserOnStreamRead()
 	{
 		MS_TRACE_STD();
 
@@ -307,7 +307,7 @@ namespace Channel
 		}
 	}
 
-	void UnixStreamSocket::UserOnUnixStreamSocketClosed(bool isClosedByPeer)
+	void PipeChannel::UserOnStreamSocketClosed(bool isClosedByPeer)
 	{
 		MS_TRACE_STD();
 

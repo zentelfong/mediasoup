@@ -5,7 +5,7 @@
 #include <uv.h>
 #include <string>
 
-class UnixStreamSocket
+class PipeStreamSocket
 {
 public:
 	/* Struct for the data field of uv_req_t when writing data. */
@@ -16,10 +16,10 @@ public:
 	};
 
 public:
-	UnixStreamSocket(int fd, size_t bufferSize);
-	UnixStreamSocket& operator=(const UnixStreamSocket&) = delete;
-	UnixStreamSocket(const UnixStreamSocket&)            = delete;
-	virtual ~UnixStreamSocket();
+    PipeStreamSocket(int fd, size_t bufferSize);
+    PipeStreamSocket& operator=(const PipeStreamSocket&) = delete;
+    PipeStreamSocket(const PipeStreamSocket&)            = delete;
+	virtual ~PipeStreamSocket();
 
 public:
 	void Close();
@@ -35,8 +35,8 @@ public:
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:
-	virtual void UserOnUnixStreamRead()                            = 0;
-	virtual void UserOnUnixStreamSocketClosed(bool isClosedByPeer) = 0;
+	virtual void UserOnStreamRead() = 0;
+	virtual void UserOnStreamSocketClosed(bool isClosedByPeer) = 0;
 
 private:
 	// Allocated by this.
@@ -57,12 +57,12 @@ protected:
 
 /* Inline methods. */
 
-inline bool UnixStreamSocket::IsClosed() const
+inline bool PipeStreamSocket::IsClosed() const
 {
 	return this->closed;
 }
 
-inline void UnixStreamSocket::Write(const std::string& data)
+inline void PipeStreamSocket::Write(const std::string& data)
 {
 	Write(reinterpret_cast<const uint8_t*>(data.c_str()), data.size());
 }

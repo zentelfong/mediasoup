@@ -82,7 +82,7 @@
 #include "common.hpp"
 #include "LogLevel.hpp"
 #include "Settings.hpp"
-#include "Channel/UnixStreamSocket.hpp"
+#include "Channel/ChannelBase.hpp"
 #include <cstdio>  // std::snprintf(), std::fprintf(), stdout, stderr
 #include <cstdlib> // std::abort(), std::getenv()
 #include <cstring>
@@ -121,11 +121,11 @@
 class Logger
 {
 public:
-	static void ClassInit(Channel::UnixStreamSocket* channel);
+	static void ClassInit(Channel::ChannelBase* channel);
 
 public:
 	static const int64_t pid;
-	static Channel::UnixStreamSocket* channel;
+	static Channel::ChannelBase* channel;
 	static const size_t bufferSize {10000};
 	static char buffer[];
 };

@@ -7,6 +7,7 @@
 
 namespace RTC
 {
+    //无加密的rtp传输
 	class PlainRtpTransport : public RTC::Transport, public RTC::UdpSocket::Listener
 	{
 	private:
@@ -55,8 +56,10 @@ namespace RTC
 
 	private:
 		// Allocated by this.
-		RTC::UdpSocket* udpSocket{ nullptr };
+		//udp socket
+        RTC::UdpSocket* udpSocket{ nullptr };
 		RTC::UdpSocket* rtcpUdpSocket{ nullptr };
+
 		RTC::TransportTuple* tuple{ nullptr };
 		RTC::TransportTuple* rtcpTuple{ nullptr };
 		// Others.

@@ -10,7 +10,7 @@
 
 /* Instance methods. */
 
-Worker::Worker(Channel::UnixStreamSocket* channel) : channel(channel)
+Worker::Worker(Channel::ChannelBase* channel) : channel(channel)
 {
 	MS_TRACE();
 
@@ -118,7 +118,7 @@ RTC::Router* Worker::GetRouterFromRequest(Channel::Request* request) const
 	return router;
 }
 
-inline void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Channel::Request* request)
+inline void Worker::OnChannelRequest(Channel::ChannelBase* /*channel*/, Channel::Request* request)
 {
 	MS_TRACE();
 
@@ -192,7 +192,7 @@ inline void Worker::OnChannelRequest(Channel::UnixStreamSocket* /*channel*/, Cha
 	}
 }
 
-inline void Worker::OnChannelRemotelyClosed(Channel::UnixStreamSocket* /*socket*/)
+inline void Worker::OnChannelRemotelyClosed(Channel::ChannelBase* /*socket*/)
 {
 	MS_TRACE_STD();
 

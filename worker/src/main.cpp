@@ -11,7 +11,7 @@
 #include "Utils.hpp"
 #include "Worker.hpp"
 #include "Channel/Notifier.hpp"
-#include "Channel/UnixStreamSocket.hpp"
+#include "Channel/PipeChannel.hpp"
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/SrtpSession.hpp"
 #include <cerrno>
@@ -34,24 +34,22 @@ void IgnoreSignals();
 int main(int argc, char* argv[])
 {
 	// Ensure we are called by our Node library.
-	//if (std::getenv("MEDIASOUP_VERSION") == nullptr)
-	//{
-	//	MS_ERROR_STD("you don't seem to be my real father!");
-	//	std::_Exit(EXIT_FAILURE);
-	//}
-	//std::string version = std::getenv("MEDIASOUP_VERSION");
-
-    std::string version = "3.0.0.0";
+	if (std::getenv("MEDIASOUP_VERSION") == nullptr)
+	{
+		MS_ERROR_STD("you don't seem to be my real father!");
+		std::_Exit(EXIT_FAILURE);
+	}
+	std::string version = std::getenv("MEDIASOUP_VERSION");
 
 	// Initialize libuv stuff (we need it for the Channel).
 	DepLibUV::ClassInit();
 
 	// Channel socket (it will be handled and deleted by the Worker).
-	Channel::UnixStreamSocket* channel{ nullptr };
+	Channel::ChannelBase* channel{ nullptr };
 
 	try
 	{
-		channel = new Channel::UnixStreamSocket(ChannelFd);
+		channel = new Channel::PipeChannel(ChannelFd);
 	}
 	catch (const MediaSoupError& error)
 	{

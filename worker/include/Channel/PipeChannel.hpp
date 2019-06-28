@@ -4,22 +4,24 @@
 #include "common.hpp"
 #include "json.hpp"
 #include "Channel/Request.hpp"
-#include "handles/UnixStreamSocket.hpp"
+#include "Channel/ChannelBase.hpp"
+#include "handles/PipeStreamSocket.hpp"
 
 namespace Channel
 {
-	class UnixStreamSocket : public ::UnixStreamSocket
+    //进程间通讯
+	class PipeChannel : public PipeStreamSocket,public ChannelBase
 	{
 	public:
 		class Listener
 		{
 		public:
-			virtual void OnChannelRequest(Channel::UnixStreamSocket* channel, Channel::Request* request) = 0;
-			virtual void OnChannelRemotelyClosed(Channel::UnixStreamSocket* channel) = 0;
+			virtual void OnChannelRequest(Channel::PipeChannel* channel, Channel::Request* request) = 0;
+			virtual void OnChannelRemotelyClosed(Channel::PipeChannel* channel) = 0;
 		};
 
 	public:
-		explicit UnixStreamSocket(int fd);
+		explicit PipeChannel(int fd);
 
 	public:
 		void SetListener(Listener* listener);
@@ -27,10 +29,9 @@ namespace Channel
 		void SendLog(char* nsPayload, size_t nsPayloadLen);
 		void SendBinary(const uint8_t* nsPayload, size_t nsPayloadLen);
 
-		/* Pure virtual methods inherited from ::UnixStreamSocket. */
 	public:
-		void UserOnUnixStreamRead() override;
-		void UserOnUnixStreamSocketClosed(bool isClosedByPeer) override;
+		void UserOnStreamRead() override;
+		void UserOnStreamSocketClosed(bool isClosedByPeer) override;
 
 	private:
 		// Passed by argument.

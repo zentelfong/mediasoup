@@ -3,10 +3,10 @@
  * Channel.
  */
 
-#define MS_CLASS "UnixStreamSocket"
+#define MS_CLASS "PipeStreamSocket"
 // #define MS_LOG_DEV
 
-#include "handles/UnixStreamSocket.hpp"
+#include "handles/PipeStreamSocket.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
@@ -17,7 +17,7 @@
 
 inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* buf)
 {
-	auto* socket = static_cast<UnixStreamSocket*>(handle->data);
+	auto* socket = static_cast<PipeStreamSocket*>(handle->data);
 
 	if (socket == nullptr)
 		return;
@@ -27,7 +27,7 @@ inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* 
 
 inline static void onRead(uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf)
 {
-	auto* socket = static_cast<UnixStreamSocket*>(handle->data);
+	auto* socket = static_cast<PipeStreamSocket*>(handle->data);
 
 	if (socket == nullptr)
 		return;
@@ -37,9 +37,9 @@ inline static void onRead(uv_stream_t* handle, ssize_t nread, const uv_buf_t* bu
 
 inline static void onWrite(uv_write_t* req, int status)
 {
-	auto* writeData = static_cast<UnixStreamSocket::UvWriteData*>(req->data);
+	auto* writeData = static_cast<PipeStreamSocket::UvWriteData*>(req->data);
 	auto* handle    = req->handle;
-	auto* socket    = static_cast<UnixStreamSocket*>(handle->data);
+	auto* socket    = static_cast<PipeStreamSocket*>(handle->data);
 
 	// Delete the UvWriteData struct (which includes the uv_req_t and the store char[]).
 	std::free(writeData);
@@ -69,7 +69,7 @@ inline static void onShutdown(uv_shutdown_t* req, int /*status*/)
 
 /* Instance methods. */
 
-UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize) : bufferSize(bufferSize)
+PipeStreamSocket::PipeStreamSocket(int fd, size_t bufferSize) : bufferSize(bufferSize)
 {
 	MS_TRACE_STD();
 
@@ -113,7 +113,7 @@ UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize) : bufferSize(buffe
 	// NOTE: Don't allocate the buffer here. Instead wait for the first uv_alloc_cb().
 }
 
-UnixStreamSocket::~UnixStreamSocket()
+PipeStreamSocket::~PipeStreamSocket()
 {
 	MS_TRACE_STD();
 
@@ -123,7 +123,7 @@ UnixStreamSocket::~UnixStreamSocket()
 	delete[] this->buffer;
 }
 
-void UnixStreamSocket::Close()
+void PipeStreamSocket::Close()
 {
 	MS_TRACE_STD();
 
@@ -162,7 +162,7 @@ void UnixStreamSocket::Close()
 	}
 }
 
-void UnixStreamSocket::Write(const uint8_t* data, size_t len)
+void PipeStreamSocket::Write(const uint8_t* data, size_t len)
 {
 	if (this->closed)
 		return;
@@ -218,7 +218,7 @@ void UnixStreamSocket::Write(const uint8_t* data, size_t len)
 		MS_ABORT("uv_write() failed: %s", uv_strerror(err));
 }
 
-inline void UnixStreamSocket::OnUvReadAlloc(size_t /*suggestedSize*/, uv_buf_t* buf)
+inline void PipeStreamSocket::OnUvReadAlloc(size_t /*suggestedSize*/, uv_buf_t* buf)
 {
 	MS_TRACE_STD();
 
@@ -245,7 +245,7 @@ inline void UnixStreamSocket::OnUvReadAlloc(size_t /*suggestedSize*/, uv_buf_t* 
 	}
 }
 
-inline void UnixStreamSocket::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
+inline void PipeStreamSocket::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
 {
 	MS_TRACE_STD();
 
@@ -262,7 +262,7 @@ inline void UnixStreamSocket::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
 		this->bufferDataLen += static_cast<size_t>(nread);
 
 		// Notify the subclass.
-		UserOnUnixStreamRead();
+		UserOnStreamRead();
 	}
 	// Peer disconneted.
 	else if (nread == UV_EOF || nread == UV_ECONNRESET)
@@ -273,7 +273,7 @@ inline void UnixStreamSocket::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
 		Close();
 
 		// Notify the subclass.
-		UserOnUnixStreamSocketClosed(this->isClosedByPeer);
+		UserOnStreamSocketClosed(this->isClosedByPeer);
 	}
 	// Some error.
 	else
@@ -286,11 +286,11 @@ inline void UnixStreamSocket::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
 		Close();
 
 		// Notify the subclass.
-		UserOnUnixStreamSocketClosed(this->isClosedByPeer);
+		UserOnStreamSocketClosed(this->isClosedByPeer);
 	}
 }
 
-inline void UnixStreamSocket::OnUvWriteError(int error)
+inline void PipeStreamSocket::OnUvWriteError(int error)
 {
 	MS_TRACE_STD();
 
@@ -305,5 +305,5 @@ inline void UnixStreamSocket::OnUvWriteError(int error)
 	Close();
 
 	// Notify the subclass.
-	UserOnUnixStreamSocketClosed(this->isClosedByPeer);
+	UserOnStreamSocketClosed(this->isClosedByPeer);
 }
