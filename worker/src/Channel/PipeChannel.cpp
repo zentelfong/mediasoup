@@ -13,15 +13,8 @@ extern "C" {
 
 namespace Channel
 {
-	/* Static. */
-
-	// netstring length for a 65536 bytes payload.
-	static constexpr size_t NsMessageMaxLen{ 65543 };
-	static constexpr size_t NsPayloadMaxLen{ 65536 };
-	static uint8_t WriteBuffer[NsMessageMaxLen];
 
 	/* Instance methods. */
-
     PipeChannel::PipeChannel(int fd)
 	  : PipeStreamSocket(fd, NsMessageMaxLen)
 	{
@@ -55,21 +48,21 @@ namespace Channel
 		if (nsPayloadLen == 0)
 		{
 			nsNumLen       = 1;
-			WriteBuffer[0] = '0';
-			WriteBuffer[1] = ':';
-			WriteBuffer[2] = ',';
+			writeBuffer[0] = '0';
+			writeBuffer[1] = ':';
+			writeBuffer[2] = ',';
 		}
 		else
 		{
 			nsNumLen = static_cast<size_t>(std::ceil(std::log10(static_cast<double>(nsPayloadLen) + 1)));
-			std::sprintf(reinterpret_cast<char*>(WriteBuffer), "%zu:", nsPayloadLen);
-			std::memcpy(WriteBuffer + nsNumLen + 1, nsPayload.c_str(), nsPayloadLen);
-			WriteBuffer[nsNumLen + nsPayloadLen + 1] = ',';
+			std::sprintf(reinterpret_cast<char*>(writeBuffer), "%zu:", nsPayloadLen);
+			std::memcpy(writeBuffer + nsNumLen + 1, nsPayload.c_str(), nsPayloadLen);
+			writeBuffer[nsNumLen + nsPayloadLen + 1] = ',';
 		}
 
 		nsLen = nsNumLen + nsPayloadLen + 2;
 
-		Write(WriteBuffer, nsLen);
+		Write(writeBuffer, nsLen);
 	}
 
 	void PipeChannel::SendLog(char* nsPayload, size_t nsPayloadLen)
@@ -92,21 +85,21 @@ namespace Channel
 		if (nsPayloadLen == 0)
 		{
 			nsNumLen       = 1;
-			WriteBuffer[0] = '0';
-			WriteBuffer[1] = ':';
-			WriteBuffer[2] = ',';
+			writeBuffer[0] = '0';
+			writeBuffer[1] = ':';
+			writeBuffer[2] = ',';
 		}
 		else
 		{
 			nsNumLen = static_cast<size_t>(std::ceil(std::log10(static_cast<double>(nsPayloadLen) + 1)));
-			std::sprintf(reinterpret_cast<char*>(WriteBuffer), "%zu:", nsPayloadLen);
-			std::memcpy(WriteBuffer + nsNumLen + 1, nsPayload, nsPayloadLen);
-			WriteBuffer[nsNumLen + nsPayloadLen + 1] = ',';
+			std::sprintf(reinterpret_cast<char*>(writeBuffer), "%zu:", nsPayloadLen);
+			std::memcpy(writeBuffer + nsNumLen + 1, nsPayload, nsPayloadLen);
+			writeBuffer[nsNumLen + nsPayloadLen + 1] = ',';
 		}
 
 		nsLen = nsNumLen + nsPayloadLen + 2;
 
-		Write(WriteBuffer, nsLen);
+		Write(writeBuffer, nsLen);
 	}
 
 	void PipeChannel::SendBinary(const uint8_t* nsPayload, size_t nsPayloadLen)
@@ -127,21 +120,21 @@ namespace Channel
 		if (nsPayloadLen == 0)
 		{
 			nsNumLen       = 1;
-			WriteBuffer[0] = '0';
-			WriteBuffer[1] = ':';
-			WriteBuffer[2] = ',';
+			writeBuffer[0] = '0';
+			writeBuffer[1] = ':';
+			writeBuffer[2] = ',';
 		}
 		else
 		{
 			nsNumLen = static_cast<size_t>(std::ceil(std::log10(static_cast<double>(nsPayloadLen) + 1)));
-			std::sprintf(reinterpret_cast<char*>(WriteBuffer), "%zu:", nsPayloadLen);
-			std::memcpy(WriteBuffer + nsNumLen + 1, nsPayload, nsPayloadLen);
-			WriteBuffer[nsNumLen + nsPayloadLen + 1] = ',';
+			std::sprintf(reinterpret_cast<char*>(writeBuffer), "%zu:", nsPayloadLen);
+			std::memcpy(writeBuffer + nsNumLen + 1, nsPayload, nsPayloadLen);
+			writeBuffer[nsNumLen + nsPayloadLen + 1] = ',';
 		}
 
 		nsLen = nsNumLen + nsPayloadLen + 2;
 
-		Write(WriteBuffer, nsLen);
+		Write(writeBuffer, nsLen);
 	}
 
 	void PipeChannel::UserOnStreamRead()

@@ -34,10 +34,16 @@ namespace Channel
 		void UserOnStreamSocketClosed(bool isClosedByPeer) override;
 
 	private:
+        enum {
+            NsMessageMaxLen = 65543,
+            NsPayloadMaxLen = 65536
+        };
+
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		// Others.
 		size_t msgStart{ 0 }; // Where the latest message starts.
+        uint8_t writeBuffer[NsMessageMaxLen];
 	};
 } // namespace Channel
 

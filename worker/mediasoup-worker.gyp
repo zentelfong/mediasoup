@@ -6,7 +6,8 @@
       'deps/netstring/netstring.gyp:netstring',
       'deps/libuv/uv.gyp:libuv',
       'deps/openssl/openssl.gyp:openssl',
-      'deps/libsrtp/libsrtp.gyp:libsrtp'
+      'deps/libsrtp/libsrtp.gyp:libsrtp',
+	  'deps/kcp/kcp.gyp:kcp'
     ],
     'sources':
     [
@@ -17,6 +18,7 @@
       'src/Logger.cpp',
       'src/Settings.cpp',
       'src/Worker.cpp',
+	  'src/MediaServer.cpp',
       'src/Utils/Crypto.cpp',
       'src/Utils/File.cpp',
       'src/Utils/IP.cpp',
@@ -58,6 +60,7 @@
       'src/RTC/TcpServer.cpp',
       'src/RTC/Transport.cpp',
       'src/RTC/TransportTuple.cpp',
+	  'src/RTC/CustomTransport.cpp',
       'src/RTC/UdpSocket.cpp',
       'src/RTC/WebRtcTransport.cpp',
       'src/RTC/Codecs/Codecs.cpp',
@@ -115,6 +118,7 @@
       'include/Settings.hpp',
       'include/Utils.hpp',
       'include/Worker.hpp',
+	  'include/MediaServer.hpp',
       'include/common.hpp',
       'include/handles/SignalsHandler.hpp',
       'include/handles/TcpConnection.hpp',
@@ -159,6 +163,7 @@
       'include/RTC/TcpServer.hpp',
       'include/RTC/Transport.hpp',
       'include/RTC/TransportTuple.hpp',
+	  'include/RTC/CustomTransport.hpp',
       'include/RTC/UdpSocket.hpp',
       'include/RTC/WebRtcTransport.hpp',
       'include/RTC/Codecs/Codecs.hpp',
@@ -341,72 +346,5 @@
         ]
       }
     },
-    {
-      'target_name': 'mediasoup-worker-fuzzer',
-      'defines': [ 'DEBUG', 'MS_LOG_STD', 'MS_TEST' ],
-      'sources':
-      [
-        # C++ source files.
-        'fuzzer/src/fuzzer.cpp',
-        'fuzzer/src/RTC/FuzzerStunMessage.cpp',
-        'fuzzer/src/RTC/FuzzerRtpPacket.cpp',
-        'fuzzer/src/RTC/RTCP/FuzzerBye.cpp',
-        'fuzzer/src/RTC/RTCP/FuzzerFeedbackPs.cpp',
-        'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsAfb.cpp',
-        'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsFir.cpp',
-        'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsLei.cpp',
-        'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsPli.cpp',
-        'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsRemb.cpp',
-        'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsRpsi.cpp',
-        'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsSli.cpp',
-        'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsTst.cpp',
-        'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsVbcm.cpp',
-        'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtp.cpp',
-        'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpEcn.cpp',
-        'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpNack.cpp',
-        'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpSrReq.cpp',
-        'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpTllei.cpp',
-        'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpTmmb.cpp',
-        'fuzzer/src/RTC/RTCP/FuzzerPacket.cpp',
-        'fuzzer/src/RTC/RTCP/FuzzerReceiverReport.cpp',
-        'fuzzer/src/RTC/RTCP/FuzzerSdes.cpp',
-        'fuzzer/src/RTC/RTCP/FuzzerSenderReport.cpp',
-        # C++ include files.
-        'fuzzer/include/RTC/FuzzerStunMessage.hpp',
-        'fuzzer/include/RTC/FuzzerRtpPacket.hpp',
-        'fuzzer/include/RTC/RTCP/FuzzerBye.hpp',
-        'fuzzer/include/RTC/RTCP/FuzzerFeedbackPs.hpp',
-        'fuzzer/include/RTC/RTCP/FuzzerFeedbackPsAfb.hpp',
-        'fuzzer/include/RTC/RTCP/FuzzerFeedbackPsFir.hpp',
-        'fuzzer/include/RTC/RTCP/FuzzerFeedbackPsLei.hpp',
-        'fuzzer/include/RTC/RTCP/FuzzerFeedbackPsPli.hpp',
-        'fuzzer/include/RTC/RTCP/FuzzerFeedbackPsRemb.hpp',
-        'fuzzer/include/RTC/RTCP/FuzzerFeedbackPsRpsi.hpp',
-        'fuzzer/include/RTC/RTCP/FuzzerFeedbackPsSli.hpp',
-        'fuzzer/include/RTC/RTCP/FuzzerFeedbackPsTst.hpp',
-        'fuzzer/include/RTC/RTCP/FuzzerFeedbackPsVbcm.hpp',
-        'fuzzer/include/RTC/RTCP/FuzzerFeedbackRtp.hpp',
-        'fuzzer/include/RTC/RTCP/FuzzerFeedbackRtpEcn.hpp',
-        'fuzzer/include/RTC/RTCP/FuzzerFeedbackRtpNack.hpp',
-        'fuzzer/include/RTC/RTCP/FuzzerFeedbackRtpSrReq.hpp',
-        'fuzzer/include/RTC/RTCP/FuzzerFeedbackRtpTllei.hpp',
-        'fuzzer/include/RTC/RTCP/FuzzerFeedbackRtpTmmb.hpp',
-        'fuzzer/include/RTC/RTCP/FuzzerPacket.hpp',
-        'fuzzer/include/RTC/RTCP/FuzzerReceiverReport.hpp',
-        'fuzzer/include/RTC/RTCP/FuzzerSdesReport.hpp',
-        'fuzzer/include/RTC/RTCP/FuzzerSenderReport.hpp',
-      ],
-      'include_dirs':
-      [
-        'fuzzer/include'
-      ],
-      'conditions':
-      [
-        [ 'OS == "linux"', {
-          'cflags': [ '-g', '-O0', '-fsanitize=address,fuzzer' ],
-          'ldflags': [ '-fsanitize=address,fuzzer' ]
-        }]
-      ]
-    }
   ]
 }

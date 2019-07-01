@@ -62,7 +62,7 @@ if __name__ == '__main__':
     common_fn  = os.path.join(root, 'common.gypi')
     # we force vs 2010 over 2008 which would otherwise be the default for gyp.
     if not os.environ.get('GYP_MSVS_VERSION'):
-      os.environ['GYP_MSVS_VERSION'] = '2010'
+      os.environ['GYP_MSVS_VERSION'] = '2015'
   else:
     args.append(os.path.join(os.path.abspath(root), 'mediasoup-worker.gyp'))
     common_fn  = os.path.join(os.path.abspath(root), 'common.gypi')
